@@ -1,6 +1,6 @@
 <template>
   <div class="goods-item" @click="itemClick">
-    <img :src="goodsItem.show.img" alt="" @load="imgLoad" />
+    <img :src="showImage" alt="" @load="imgLoad" />
     <div class="goods-info">
       <p>
         <a :href="goodsItem.link">{{ goodsItem.title }}</a>
@@ -22,10 +22,21 @@ export default {
       },
     },
   },
+  computed: {
+    showImage() {
+      return this.goodsItem.image || this.goodsItem.show.img;
+    },
+  },
   methods: {
     imgLoad() {
-      // console.log("imgLoad");
       this.$bus.$emit("itemImageLoad");
+
+      // 不同页面图片刷新方案一：通过路由进行判断
+      // if (this.$route.path.indexOf("/home")) {
+      //   this.$bus.$emit("homeItemImageLoad");
+      // } else if (this.$route.path.indexOf("/detail")) {
+      //   this.$bus.$emit("detailItemImageLoad");
+      // }
     },
     itemClick() {
       this.$router.push("/detail/" + this.goodsItem.iid);

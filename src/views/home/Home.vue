@@ -46,6 +46,7 @@ import BackTop from "components/content/backTop/BackTop";
 
 import { getHomeMultidata, getHomeGoods } from "network/home";
 import { debounce } from "common/utils";
+import { backTopMixin } from "common/mixin";
 
 export default {
   name: "Home",
@@ -59,6 +60,7 @@ export default {
     Scroll,
     BackTop,
   },
+  mixins: [backTopMixin],
   data() {
     return {
       banners: [],
@@ -69,10 +71,11 @@ export default {
         sell: { page: 0, list: [] },
       },
       currentType: "pop",
-      isShowBackTop: false,
+      // isShowBackTop: false,
       tabOffsetTop: 0,
       isTabFixed: false,
       saveY: 0,
+      itemImgListener: null,
     };
   },
   computed: {
@@ -90,11 +93,16 @@ export default {
     this.getHomeGoods("sell");
   },
   mounted() {
-    // 1.图片加载完成的事件监听  优化：防抖
+    // 这个地方img标签确实被挂载，但是其中的图片还没有占据高度
+
+    // this.$refs.scroll.refresh 对这个函数进行防抖操作
     const refresh = debounce(this.$refs.scroll.refresh, 200);
-    this.$bus.$on("itemImageLoad", () => {
+
+    // 对监听的事件进行保存
+    this.itemImgListener = () => {
       refresh();
-    });
+    };
+    this.$bus.$on("itemImageLoad", this.itemImgListener);
 
     // this.$bus 需要在挂载完成后调用，否则可能会为空
     // 1.监听item中图片加载完成
@@ -110,8 +118,11 @@ export default {
     this.$refs.scroll.refresh();
   },
   deactivated() {
-    // 离开时，保存一个位置信息
+    // 1.保存Y值
     this.saveY = this.$refs.scroll.getScrollY();
+
+    // 2.取消全局事件的监听
+    this.$bus.$off("itemImgLoad", this.itemImgListener);
   },
   methods: {
     /**
@@ -142,11 +153,11 @@ export default {
       this.$refs.tabControl1.currentIndex = index;
       this.$refs.tabControl2.currentIndex = index;
     },
-    backClick() {
-      // this.$refs.scroll.scroll.scrollTo(0, 0, 500);
-      // 封装方法
-      this.$refs.scroll.scrollTo(0, 0, 500);
-    },
+    // backClick() {
+    //   // this.$refs.scroll.scroll.scrollTo(0, 0, 500);
+    //   // 封装方法
+    //   this.$refs.scroll.scrollTo(0, 0, 500);
+    // },
     contentScroll(position) {
       // console.log(position);
       // position > 1000
